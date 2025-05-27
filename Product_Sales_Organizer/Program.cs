@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +18,8 @@ namespace Product_Sales_Organizer
             salesHistory.Add(File.ReadAllLines("ThursdaySales.txt"));
             salesHistory.Add(File.ReadAllLines("FridaySales.txt"));
 
-            List<string> uniqueProducts = new List<string>();
+            HashSet<string> existingLines = new HashSet<string>();
+            HashSet<string> existingProducts = new HashSet<string>();
 
             for (int i = 0; i < salesHistory.Count; i++)
             {
@@ -37,15 +38,38 @@ namespace Product_Sales_Organizer
                 for (int j = 0; j < salesHistory[i].Length; j++)
                 {
                     string[] saleSplit = salesHistory[i][j].Split(',');
-                    if (!(uniqueProducts.Contains(saleSplit[0])))
+                    string appendText = $"{salesHistory[i][j]},{date}";
+                    string productName = saleSplit[0];
+
+                    if (!(existingProducts.Contains(saleSplit[0])))
+                        existingProducts.Add(saleSplit[0]);
+
+                    if (File.Exists($"{productName}.txt"))
                     {
-                        uniqueProducts.Add(saleSplit[0]);
-                        File.Create($"{saleSplit[0]}");
+                        string[] fileCheck = File.ReadAllLines($"{productName}.txt");
+                        foreach (string line in fileCheck)
+                            existingLines.Add(line);
                     }
-                    File.AppendAllText($"{saleSplit[0]}.txt", $"{date} - {salesHistory[i][j]}\n");
+
+                    if (!(existingLines.Contains(appendText)))
+                    {
+                        File.AppendAllText($"{productName}.txt", $"{appendText}\n");
+                        existingLines.Add(appendText);
+                    }
                 }
+            }
+
+            Console.WriteLine("Outputted Files:");
+            foreach (string product in existingProducts)
+            {
+                string[] productFile = File.ReadAllLines($"{product}.txt");
+
+                Console.WriteLine($"{product} Sales:");
+                foreach (string line in productFile)
+                    Console.WriteLine(line);
+
+                Console.WriteLine();
             }
         }
     }
 }
-
